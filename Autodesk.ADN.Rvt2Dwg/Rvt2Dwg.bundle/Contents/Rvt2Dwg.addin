@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+	<AddIn Type="DBApplication">
+		<Name>Rvt2Dwg</Name>
+		<FullClassName>Autodesk.ADN.Rvt2Dwg.MainApp</FullClassName>
+		<Text>Rvt2Dwg</Text>
+		<Description>Export RVT to DWG</Description>
+		<VisibilityMode>AlwaysVisible</VisibilityMode>
+		<Assembly>.\Rvt2Dwg.dll</Assembly>
+		<AddInId>2E436E04-9D7F-4F20-8A27-A9463A377ADF</AddInId>
+		<VendorId>ADSK</VendorId>
+		<VendorDescription>Autodesk, Inc, www.autodesk.com</VendorDescription>
+	</AddIn>
+</RevitAddIns>
