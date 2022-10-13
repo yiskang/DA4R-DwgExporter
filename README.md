@@ -181,6 +181,10 @@
 
 3. To export Revit 3D view to 3D DWG and have the elements being exported as 3d solids, the solid style of [export DWG setups](https://knowledge.autodesk.com/support/revit/learn-explore/caas/CloudHelp/cloudhelp/2019/ENU/Revit-DocumentPresent/files/GUID-3739AD36-FBAA-41E3-AC83-6D79C3C276CD-htm.html) must be `ACIS solids` (see [AKN](https://knowledge.autodesk.com/support/revit/learn-explore/caas/sfdcarticles/sfdcarticles/Revit-How-to-export-a-model-to-dwg-as-3d-solids.html)).
 
+## Limits
+
+- Currently, this add-in supports creating/modifying export DWG setup on the fly, but only `TargetUnit`, `UseSharedCoords` and `SolidMode` of [CustomSettings.cs](/Autodesk.ADN.Rvt2Dwg/CustomSettings.cs) are tested. Feel free to add more options by uncommenting codes at [MainApp.cs#L321](/Autodesk.ADN.Rvt2Dwg/MainApp.cs#L321).
+
 ## License
 
 This sample is licensed under the terms of the [MIT License](http://opensource.org/licenses/MIT). Please see the [LICENSE](LICENSE) file for full details.
