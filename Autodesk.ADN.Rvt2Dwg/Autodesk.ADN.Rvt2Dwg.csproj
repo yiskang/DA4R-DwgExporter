@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomFailuresProcessor.cs" />
+    <Compile Include="CustomSettings.cs" />
     <Compile Include="InputParams.cs" />
     <Compile Include="MainApp.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

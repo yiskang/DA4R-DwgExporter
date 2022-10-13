@@ -26,10 +26,14 @@ namespace Autodesk.ADN.Rvt2Dwg
 {
     class InputParams
     {
-        public string exportSettingName { get; set; }
+        public string ExportSettingName { get; set; }
 
         public string ViewSetName { get; set; }
 
         public List<string> ViewIds { get; set; }
+
+        public bool ApplyCustomSettings { get; set; } = false;
+
+        public CustomSettings CustomSettings { get; set; }
     }
 }

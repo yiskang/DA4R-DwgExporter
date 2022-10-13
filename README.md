@@ -123,6 +123,50 @@
 }
 ```
 
+- Export DWG by modifying predefined export DWG setup on the fly and specific view ids
+
+```json
+{
+    "activityId": "yoursalias.DwgExporterActivity+dev",
+    "arguments": {
+   "inputFile": {
+     "verb": "get",
+     "url": "https://developer.api.autodesk.com/oss/v2/signedresources/...?region=US"
+   },
+   "inputJson": {
+     "verb": "get",
+     "url": "data:application/json,{ exportSettingName': 'my-dwg-export', 'viewIds': [ '44745acb-ebea-4fb9-a091-88d28bd746c7-000ea86d' ], 'applyCustomSettings': true, 'customSettings': { 'solidMode': 'ACIS' }}"
+   },
+   "outputDwg": {
+     "verb": "put",
+     "url": "https://developer.api.autodesk.com/oss/v2/signedresources/...?region=US"
+   }
+ }
+}
+```
+
+- Export DWG by creating export DWG setup on the fly and specific view ids
+
+```json
+{
+    "activityId": "yoursalias.DwgExporterActivity+dev",
+    "arguments": {
+   "inputFile": {
+     "verb": "get",
+     "url": "https://developer.api.autodesk.com/oss/v2/signedresources/...?region=US"
+   },
+   "inputJson": {
+     "verb": "get",
+     "url": "data:application/json,{ 'viewIds': [ '44745acb-ebea-4fb9-a091-88d28bd746c7-000ea86d' ], 'applyCustomSettings': true, 'customSettings': { 'useSharedCoords': true, 'targetUnit': 'millimeter' }}"
+   },
+   "outputDwg": {
+     "verb": "put",
+     "url": "https://developer.api.autodesk.com/oss/v2/signedresources/...?region=US"
+   }
+ }
+}
+```
+
 ### Tips & Tricks
 
 1. This addin will find below [export DWG setups](https://knowledge.autodesk.com/support/revit/learn-explore/caas/CloudHelp/cloudhelp/2019/ENU/Revit-DocumentPresent/files/GUID-3739AD36-FBAA-41E3-AC83-6D79C3C276CD-htm.html) in the input RVT file. if nothing matched found , it will use default settings of Revit API.

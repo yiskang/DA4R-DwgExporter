@@ -65,7 +65,7 @@ namespace Autodesk.ADN.Rvt2Dwg
             Application app = data.RevitApp;
             if (app == null)
             {
-                LogTrace("Error occured");
+                LogTrace("Error occurred");
                 LogTrace("Invalid Revit App.");
                 return false;
             }
@@ -73,7 +73,7 @@ namespace Autodesk.ADN.Rvt2Dwg
             string modelPath = data.FilePath;
             if (string.IsNullOrWhiteSpace(modelPath))
             {
-                LogTrace("Error occured");
+                LogTrace("Error occurred");
                 LogTrace("Invalid File Path.");
                 return false;
             }
@@ -81,18 +81,17 @@ namespace Autodesk.ADN.Rvt2Dwg
             var doc = data.RevitDoc;
             if (doc == null)
             {
-                LogTrace("Error occured");
+                LogTrace("Error occurred");
                 LogTrace("Invalid Revit DB Document.");
                 return false;
             }
 
-            var inputParams = JsonConvert.DeserializeObject<InputParams>(File.ReadAllText("params.json"));
+            var inputParams = JsonConvert.DeserializeObject<InputParams>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "params.json")));
             if (inputParams == null)
             {
                 LogTrace("Invalid Input Params or Empty JSON Inpu.t");
                 return false;
             }
-
 
             LogTrace("Creating export folder...");
 
@@ -172,7 +171,7 @@ namespace Autodesk.ADN.Rvt2Dwg
 
             if (viewIds == null || viewIds.Count() <= 0)
             {
-                LogTrace("Error occured");
+                LogTrace("Error occurred");
                 LogTrace("No views to be exported...");
                 return false;
             }
@@ -186,6 +185,11 @@ namespace Autodesk.ADN.Rvt2Dwg
                     transGroup.Start();
 
                     DWGExportOptions exportOpts = GetDWGExportOptions(doc, inputParams);
+                    if (exportOpts != null && inputParams.ApplyCustomSettings == true && inputParams.CustomSettings != null)
+                    {
+                        ApplyCustomDWGExportOptions(doc, exportOpts, inputParams.CustomSettings, modelPath);
+                    }
+
                     if (exportOpts != null && exportOpts.ExportOfSolids != SolidGeometry.ACIS)
                     {
                         using (var trans = new Transaction(doc, "Ensure ExportDWGSettings use ASCI Solid presentation."))
@@ -196,7 +200,7 @@ namespace Autodesk.ADN.Rvt2Dwg
                         }
                     }
 
-                    var rvt_filename = Path.GetFileNameWithoutExtension(doc.PathName);
+                    var rvt_filename = Path.GetFileNameWithoutExtension(modelPath);
 
                     foreach (var viewId in viewIds)
                     {
@@ -259,14 +263,14 @@ namespace Autodesk.ADN.Rvt2Dwg
 
             ExportDWGSettings settings = null;
 
-            if (!string.IsNullOrWhiteSpace(inputParams.exportSettingName))
+            if (!string.IsNullOrWhiteSpace(inputParams.ExportSettingName))
             {
-                LogTrace(string.Format("- Getting Export DWG settings by given export setting name `{0}`.", inputParams.exportSettingName));
+                LogTrace(string.Format("- Getting Export DWG settings by given export setting name `{0}`.", inputParams.ExportSettingName));
 
-                settings = ExportDWGSettings.FindByName(document, inputParams.exportSettingName);
+                settings = ExportDWGSettings.FindByName(document, inputParams.ExportSettingName);
 
                 if (settings == null)
-                    LogTrace(string.Format("- Warning: No export DWG settings found with given export setting name `{0}`.", inputParams.exportSettingName));
+                    LogTrace(string.Format("- Warning: No export DWG settings found with given export setting name `{0}`.", inputParams.ExportSettingName));
             }
             else
             {
@@ -281,13 +285,13 @@ namespace Autodesk.ADN.Rvt2Dwg
             if (settings == null)
             {
                 LogTrace("- Creating an ExportDWGSettings with default values.");
-                using (var trans = new Transaction(document, "Create the ExportDWGSettings with defaults."))
+                using (var trans = new Transaction(document, "Create the ExportDWGSettings with defaults"))
                 {
                     trans.Start();
                     settings = ExportDWGSettings.Create(document, "Export DWG Default");
                     trans.Commit();
                 }
-                LogTrace("- Default ExportDWGSettings created.");
+                LogTrace("- Default `ExportDWGSettings` created.");
             }
 
             LogTrace(string.Format("Export DWG using settings `{0}`.", settings.Name));
@@ -296,9 +300,108 @@ namespace Autodesk.ADN.Rvt2Dwg
 
         }
 
+        private DWGExportOptions ApplyCustomDWGExportOptions(Document document, DWGExportOptions exportOptions, CustomSettings userSettings, string filePath)
+        {
+            LogTrace("Applying custom export settings on the fly.");
+            LogTrace("- Applying custom settings to the `DWGExportOptions`.");
+
+            using (var trans = new Transaction(document, "Apply custom settings to the DWGExportOptions"))
+            {
+                trans.Start();
+
+                if (userSettings.TargetUnit.HasValue)
+                    exportOptions.TargetUnit = userSettings.TargetUnit.Value;
+
+                if (userSettings.UseSharedCoords.HasValue)
+                    exportOptions.SharedCoords = userSettings.UseSharedCoords.Value;
+
+                if (userSettings.SolidMode.HasValue)
+                    exportOptions.ExportOfSolids = userSettings.SolidMode.Value;
+
+                //if (!string.IsNullOrWhiteSpace(userSettings.LayerMapping))
+                //{
+                //    exportOptions.LayerMapping = userSettings.LayerMapping;
+
+                //    if (!string.IsNullOrWhiteSpace(userSettings.OverrideLayerFilename))
+                //    {
+                //        var layerMapFilename = Path.Combine(Path.GetDirectoryName(filePath), userSettings.OverrideLayerFilename);
+                //        if (File.Exists(layerMapFilename))
+                //            exportOptions.LayerMapping = layerMapFilename;
+                //        else
+                //            throw new InvalidDataException("Specified layer mapping file not found");
+                //    }
+                //}
+
+                //if (userSettings.LineScaling.HasValue)
+                //    exportOptions.LineScaling = userSettings.LineScaling.Value;
+
+                //if(!string.IsNullOrWhiteSpace(userSettings.OverrideLineTypesFileName))
+                //{
+                //    var lineTypesFilename = Path.Combine(Path.GetDirectoryName(filePath), userSettings.OverrideLineTypesFileName);
+                //    if (File.Exists(lineTypesFilename))
+                //        exportOptions.LinetypesFileName = lineTypesFilename;
+                //    else
+                //        throw new InvalidDataException("Specified line types file not found");
+                //}
+
+                //if (userSettings.UseHatchBackgroundColor.HasValue)
+                //{
+                //    exportOptions.UseHatchBackgroundColor = userSettings.UseHatchBackgroundColor.Value;
+                //    if (userSettings.HatchBackgroundColor != null && userSettings.HatchBackgroundColor.IsValid)
+                //        exportOptions.HatchBackgroundColor = userSettings.HatchBackgroundColor;
+                //}
+
+                //if (!string.IsNullOrWhiteSpace(userSettings.OverrideHatchPatternsFilename))
+                //{
+                //    var hatchPatternsFilename = Path.Combine(Path.GetDirectoryName(filePath), userSettings.OverrideHatchPatternsFilename);
+                //    if (File.Exists(hatchPatternsFilename))
+                //        exportOptions.HatchPatternsFileName = hatchPatternsFilename;
+                //    else
+                //        throw new InvalidDataException("Specified hatch patterns file not found");
+                //}
+
+                //if (userSettings.ColorMode.HasValue)
+                //    exportOptions.Colors = userSettings.ColorMode.Value;
+
+                //if (userSettings.TextTreatment.HasValue)
+                //    exportOptions.TextTreatment = userSettings.TextTreatment.Value;
+
+                //if (userSettings.ExportingRoomsAndArea.HasValue)
+                //    exportOptions.ExportingAreas = userSettings.ExportingRoomsAndArea.Value;
+
+                //if (userSettings.MarkNonplotLayers.HasValue)
+                //{
+                //    exportOptions.MarkNonplotLayers = userSettings.MarkNonplotLayers.Value;
+                //    if (!string.IsNullOrWhiteSpace(userSettings.NonplotSuffix))
+                //        exportOptions.NonplotSuffix = userSettings.NonplotSuffix;
+                //}
+
+                //if (userSettings.HideScopeBox.HasValue)
+                //    exportOptions.HideScopeBox = userSettings.HideScopeBox.Value;
+
+                //if (userSettings.HideReferencePlane.HasValue)
+                //    exportOptions.HideReferencePlane = userSettings.HideReferencePlane.Value;
+
+                //if (userSettings.HideUnreferenceViewTags.HasValue)
+                //    exportOptions.HideUnreferenceViewTags = userSettings.HideUnreferenceViewTags.Value;
+
+                //if (userSettings.PreserveCoincidentLines.HasValue)
+                //    exportOptions.PreserveCoincidentLines = userSettings.PreserveCoincidentLines.Value;
+
+                //if (userSettings.ExportingViewsOnSheetSeparately.HasValue)
+                //    exportOptions.MergedViews = !userSettings.ExportingViewsOnSheetSeparately.Value;
+
+                trans.Commit();
+            }
+
+            LogTrace("- Custom settings to the `DWGExportOptions` applied.");
+
+            return exportOptions;
+        }
+
         private void PrintError(Exception ex)
         {
-            LogTrace("Error occured");
+            LogTrace("Error occurred");
             LogTrace(ex.Message);
 
             if (ex.InnerException != null)
