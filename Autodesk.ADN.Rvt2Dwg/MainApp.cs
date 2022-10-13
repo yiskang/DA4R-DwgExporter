@@ -270,15 +270,27 @@ namespace Autodesk.ADN.Rvt2Dwg
             }
             else
             {
-                LogTrace(string.Format("- Getting Export DWG settings since no export setting name specified.", inputParams.exportSettingName));
+                LogTrace("- Getting Export DWG settings since no export setting name specified.");
 
                 settings = ExportDWGSettings.GetActivePredefinedSettings(document);
 
                 if (settings == null)
-                    LogTrace("- Warning: No active predefined settings found for exporting DWG in the Revit doucment.", inputParams.exportSettingName);
+                    LogTrace("- Warning: No active predefined settings found for exporting DWG in the Revit doucment.");
             }
-            
-            LogTrace(string.Format("Export DWG using settings `{0}`.", settings == null ? "Default": settings.Name));
+
+            if (settings == null)
+            {
+                LogTrace("- Creating an ExportDWGSettings with default values.");
+                using (var trans = new Transaction(document, "Create the ExportDWGSettings with defaults."))
+                {
+                    trans.Start();
+                    settings = ExportDWGSettings.Create(document, "Export DWG Default");
+                    trans.Commit();
+                }
+                LogTrace("- Default ExportDWGSettings created.");
+            }
+
+            LogTrace(string.Format("Export DWG using settings `{0}`.", settings.Name));
 
             return settings?.GetDWGExportOptions();
 
