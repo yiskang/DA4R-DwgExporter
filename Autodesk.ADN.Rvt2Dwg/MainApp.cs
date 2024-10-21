@@ -1,4 +1,4 @@
-﻿// (C) Copyright 2022 by Autodesk, Inc. 
+﻿// (C) Copyright 2024 by Autodesk, Inc. 
 //
 // Permission to use, copy, modify, and distribute this software
 // in object code form for any purpose and without fee is hereby
@@ -38,6 +38,9 @@ namespace Autodesk.ADN.Rvt2Dwg
     {
         public ExternalDBApplicationResult OnStartup(ControlledApplication application)
         {
+            // Hook up the CustomFailureHandling failure processor.
+            Application.RegisterFailuresProcessor(new CustomFailuresProcessor());
+
             DesignAutomationBridge.DesignAutomationReadyEvent += HandleDesignAutomationReadyEvent;
             return ExternalDBApplicationResult.Succeeded;
         }
@@ -112,60 +115,93 @@ namespace Autodesk.ADN.Rvt2Dwg
             LogTrace(string.Format("Export Path: `{0}`...", exportPath));
 
             LogTrace("Collecting views...");
-            IEnumerable<ElementId> viewIds = null;
+            var viewIds = new List<ElementId>();
 
-            if (!string.IsNullOrWhiteSpace(inputParams.ViewSetName))
+            if (inputParams.ExportAllViews == true)
             {
-                LogTrace(string.Format("- From given view set name `{0}`...", inputParams.ViewSetName));
-                using (var collector = new FilteredElementCollector(doc))
-                {
-                    var viewSheetSet = collector
-                                        .OfClass(typeof(ViewSheetSet))
-                                        .Cast<ViewSheetSet>()
-                                        .Where(viewSet => viewSet.Name == inputParams.ViewSetName)
-                                        .FirstOrDefault();
-
-                    if (viewSheetSet == null || viewSheetSet.Views.Size <= 0)
-                        throw new InvalidDataException("Invalid input `viewSetName`, no view set with the given name found or no views found in the view set!");
-
-                    var viewElemIds = new List<ElementId>();
-                    foreach (View view in viewSheetSet.Views)
-                    {
-                        viewElemIds.Add(view.Id);
-                    }
-
-                    viewIds = viewElemIds;
-                }
-            }
-            else
-            {
-                LogTrace("- From given view Ids...");
+                LogTrace("- Collecting all views...");
                 try
                 {
-                    if (inputParams.ViewIds == null || inputParams.ViewIds.Count() <= 0)
-                    {
-                        throw new InvalidDataException("Invalid input` viewIds` while the `viewSetName` value is not specified!");
-                    }
-
                     var viewElemIds = new List<ElementId>();
-                    foreach (var viewGuid in inputParams.ViewIds)
+                    IEnumerable<View> views = new FilteredElementCollector(doc)
+                                                .WhereElementIsNotElementType()
+                                                .OfCategory(BuiltInCategory.OST_Views)
+                                                .Cast<View>()
+                                                .Where(view => (!view.IsTemplate) && (view.CanBePrinted));
+
+                    foreach (View view in views)
                     {
-                        var view = doc.GetElement(viewGuid) as View;
-                        if (view == null || (!view.CanBePrinted))
-                        {
-                            LogTrace(string.Format("Warning: No view found with gieven unqique id `{0}` or view cannot be exported.", viewGuid));
+                        if ((view.ViewType == ViewType.Rendering) && (inputParams.IncludingRenderingViews == false))
                             continue;
-                        }
 
                         viewElemIds.Add(view.Id);
                     }
 
-                    viewIds = viewElemIds;
+                    viewIds.AddRange(viewElemIds);
                 }
                 catch (Exception ex)
                 {
                     this.PrintError(ex);
                     return false;
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(inputParams.ViewSetName))
+                {
+                    LogTrace(string.Format("- From given view set name `{0}`...", inputParams.ViewSetName));
+                    using (var collector = new FilteredElementCollector(doc))
+                    {
+                        var viewSheetSet = collector
+                                            .OfClass(typeof(ViewSheetSet))
+                                            .Cast<ViewSheetSet>()
+                                            .Where(viewSet => viewSet.Name == inputParams.ViewSetName)
+                                            .FirstOrDefault();
+
+                        if (viewSheetSet == null || viewSheetSet.Views.Size <= 0)
+                            throw new InvalidDataException("Invalid input `viewSetName`, no view set with the given name found or no views found in the view set!");
+
+                        var viewElemIds = new List<ElementId>();
+                        foreach (View view in viewSheetSet.Views)
+                        {
+                            if (!view.CanBePrinted)
+                            {
+                                LogTrace(string.Format("Warning: view `{0}` cannot be exported.", view.UniqueId));
+                                continue;
+                            }
+
+                            viewElemIds.Add(view.Id);
+                        }
+
+                        viewIds.AddRange(viewElemIds);
+                    }
+                }
+
+                if (inputParams.ViewIds != null && inputParams.ViewIds.Count > 0)
+                {
+                    LogTrace("- From given view Ids...");
+                    try
+                    {
+                        var viewElemIds = new List<ElementId>();
+                        foreach (var viewGuid in inputParams.ViewIds)
+                        {
+                            var view = doc.GetElement(viewGuid) as View;
+                            if (view == null || (!view.CanBePrinted))
+                            {
+                                LogTrace(string.Format("Warning: No view found with gieven unqique id `{0}` or view cannot be exported.", viewGuid));
+                                continue;
+                            }
+
+                            viewElemIds.Add(view.Id);
+                        }
+
+                        viewIds.AddRange(viewElemIds);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.PrintError(ex);
+                        return false;
+                    }
                 }
             }
 

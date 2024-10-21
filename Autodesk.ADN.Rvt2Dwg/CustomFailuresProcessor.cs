@@ -1,4 +1,4 @@
-﻿// (C) Copyright 2022 by Autodesk, Inc. 
+﻿// (C) Copyright 2024 by Autodesk, Inc. 
 //
 // Permission to use, copy, modify, and distribute this software
 // in object code form for any purpose and without fee is hereby
@@ -22,6 +22,7 @@
 
 using Autodesk.Revit.DB;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Autodesk.ADN.Rvt2Dwg
 {
@@ -35,16 +36,64 @@ namespace Autodesk.ADN.Rvt2Dwg
         {
             IList<FailureMessageAccessor> failures = data.GetFailureMessages();
 
+            const int MAX_RESOLUTION_ATTEMPTS = 3;
+            bool hasError = false;
+            bool hasWarning = false;
+
             foreach (FailureMessageAccessor f in failures)
             {
+                // check how many resolutions types were attempted to try to prevent
+                // entering infinite loop
+                var resolutionTypeList = data.GetAttemptedResolutionTypes(f);
+                if (resolutionTypeList.Count >= MAX_RESOLUTION_ATTEMPTS)
+                {
+                    MainApp.LogTrace("Failure: Attempted to resolve the failure "
+                      + f.GetDescriptionText() + " " + resolutionTypeList.Count
+                      + " times with resolution " + f.GetCurrentResolutionType()
+                      + ". Rolling back transaction.");
+                    return FailureProcessingResult.ProceedWithRollBack;
+                }
+
                 FailureSeverity fseverity = data.GetSeverity();
+
+                if (fseverity == FailureSeverity.Error)
+                {
+                    ICollection<ElementId> failingElementIds = f.GetFailingElementIds();
+
+                    if (failingElementIds.Count > 0)
+                    {
+                        if (f.HasResolutionOfType(FailureResolutionType.DetachElements))
+                        {
+                            MainApp.LogTrace("FailureInstruction `Delete Element(s)` found. It will delete failling elements to resolve the failure.");
+                            MainApp.LogTrace($"Following elements will be delted: {string.Join(",", failingElementIds.Select(eid => eid.IntegerValue))}");
+
+                            f.SetCurrentResolutionType(FailureResolutionType.DeleteElements);
+                        }
+
+                        if (f.GetFailureDefinitionId() == BuiltInFailures.FamilyFailures.FamilyIsCorruptError)
+                        {
+                            data.ResolveFailure(f);
+                        }
+
+                        hasError = true;
+                        data.ResolveFailure(f);
+                    }
+                }
 
                 if (fseverity == FailureSeverity.Warning)
                 {
+                    hasWarning = true;
                     data.DeleteWarning(f);
+                }
+
+
+                if (hasWarning || hasError)
+                {
+                    return FailureProcessingResult.ProceedWithCommit;
                 }
             }
 
+            MainApp.LogTrace("Attempting to continue.");
             return FailureProcessingResult.Continue;
         }
     }

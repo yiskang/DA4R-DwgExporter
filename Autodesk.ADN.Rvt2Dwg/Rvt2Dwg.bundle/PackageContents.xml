@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ApplicationPackage Name="RevitDesignAutomation" Description="RVT to DWG Addin" Author="eason.kang@autodesk.com">
-	<CompanyDetails Name="Autodesk, Inc" Url="http://learnforge.autodesk.io" Email="forge.help@autodesk.com"/>
+<ApplicationPackage Name="RevitDesignAutomation" Description="RVT to DWG Addin" Author="Eason Kang">
+	<CompanyDetails Name="Autodesk, Inc" Url="http://aps.autodesk.com/tutorials" Email="aps.help@autodesk.com"/>
 	<Components Description="Export RVT to DWG">
-		<RuntimeRequirements SeriesMax="R2023" SeriesMin="R2021" Platform="Revit" OS="Win64"/>
+		<RuntimeRequirements SeriesMax="R2024" SeriesMin="R2021" Platform="Revit" OS="Win64"/>
 		<ComponentEntry LoadOnRevitStartup="True" LoadOnCommandInvocation="False" AppDescription="Export RVT to DWG" ModuleName="./Contents/Rvt2Dwg.addin" Version="1.0.0" AppName="Rvt2Dwg"/>
 	</Components>
 </ApplicationPackage>

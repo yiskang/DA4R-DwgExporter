@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DesignAutomationBridge, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autodesk.Forge.DesignAutomation.Revit.2021.0.2\lib\net48\DesignAutomationBridge.dll</HintPath>
+      <HintPath>..\packages\Autodesk.Forge.DesignAutomation.Revit.2023.0.2\lib\net48\DesignAutomationBridge.dll</HintPath>
     </Reference>
     <Reference Include="NewtonSoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -40,7 +40,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="RevitAPI">
-      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\Revit 2021\RevitAPI.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\Revit 2023\RevitAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -75,7 +75,7 @@ del /F "$(TargetDir)Rvt2Dwg.zip"
 "C:\Program Files\7-Zip\7z.exe" a -tzip "$(TargetDir)Rvt2Dwg.zip" "$(ProjectDir)Rvt2Dwg.bundle\" -xr0!*.pdb
 
 
-if exist "$(AppData)\Autodesk\REVIT\Addins\2021" copy "$(ProjectDir)Rvt2Dwg.bundle\Contents\*.addin" "$(AppData)\Autodesk\REVIT\Addins\2021"
-if exist "$(AppData)\Autodesk\REVIT\Addins\2021" copy "$(ProjectDir)$(OutputPath)*.dll" "$(AppData)\Autodesk\REVIT\Addins\2021"</PostBuildEvent>
+if exist "$(AppData)\Autodesk\REVIT\Addins\2023" copy "$(ProjectDir)Rvt2Dwg.bundle\Contents\*.addin" "$(AppData)\Autodesk\REVIT\Addins\2023"
+if exist "$(AppData)\Autodesk\REVIT\Addins\2023" copy "$(ProjectDir)$(OutputPath)*.dll" "$(AppData)\Autodesk\REVIT\Addins\2023"</PostBuildEvent>
   </PropertyGroup>
 </Project>

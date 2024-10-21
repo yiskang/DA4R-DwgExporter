@@ -1,4 +1,4 @@
-﻿// (C) Copyright 2022 by Autodesk, Inc. 
+﻿// (C) Copyright 2024 by Autodesk, Inc. 
 //
 // Permission to use, copy, modify, and distribute this software
 // in object code form for any purpose and without fee is hereby
@@ -31,6 +31,13 @@ namespace Autodesk.ADN.Rvt2Dwg
         public string ViewSetName { get; set; }
 
         public List<string> ViewIds { get; set; }
+
+        public bool ExportAllViews { get; set; } = false;
+
+        /// <summary>
+        /// True to include rendering-typed views when ExportAllViews=true
+        /// </summary>
+        public bool IncludingRenderingViews { get; set; } = false;
 
         public bool ApplyCustomSettings { get; set; } = false;
 
