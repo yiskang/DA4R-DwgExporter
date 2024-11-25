@@ -62,7 +62,7 @@ namespace Autodesk.ADN.Rvt2Dwg
 
                     if (failingElementIds.Count > 0)
                     {
-                        if (f.HasResolutionOfType(FailureResolutionType.DetachElements))
+                        if (f.HasResolutionOfType(FailureResolutionType.DeleteElements))
                         {
                             MainApp.LogTrace("FailureInstruction `Delete Element(s)` found. It will delete failling elements to resolve the failure.");
                             MainApp.LogTrace($"Following elements will be delted: {string.Join(",", failingElementIds.Select(eid => eid.IntegerValue))}");
@@ -72,7 +72,7 @@ namespace Autodesk.ADN.Rvt2Dwg
 
                         if (f.GetFailureDefinitionId() == BuiltInFailures.FamilyFailures.FamilyIsCorruptError)
                         {
-                            data.ResolveFailure(f);
+                            MainApp.LogTrace("Some families have become unusable. It will reload the families, or delete them from the model.");
                         }
 
                         hasError = true;
